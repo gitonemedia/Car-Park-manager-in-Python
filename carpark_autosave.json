@@ -1,0 +1,21 @@
+{
+  "capacity": 10,
+  "parked_cars": {
+    "1": {
+      "plate": "12d2222",
+      "time_in": "2025-11-19T14:44:47.088043+07:00"
+    }
+  },
+  "transactions": [
+    {
+      "spot": 2,
+      "plate": "12121",
+      "time_in": "2025-11-19T14:51:51.491252+07:00",
+      "time_out": "2025-11-19T15:32:17.409276+07:00",
+      "amount": 1.35,
+      "paid": true,
+      "comments": ""
+    }
+  ],
+  "rate_per_hour": 2.0
+}
