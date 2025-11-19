@@ -1,4 +1,4 @@
-# Car Park Management System - Executable
+# Car Park Management System - Executable by One Media Asia Co, Ltd
 
 ## Quick Start
 
@@ -44,4 +44,4 @@ If the executable doesn't run:
 
 ---
 
-**Car Park Manager v1.0** - Professional parking lot management system
+**Car Park Manager v1.0** - Professional parking lot management system | Copyright Peter Greaney @ One Media Asia Co, Ltd
