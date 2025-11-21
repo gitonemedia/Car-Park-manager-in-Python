@@ -8,9 +8,10 @@ class CarPark:
         self.transactions = []
         # rate per hour for computing amount
         self.rate_per_hour = 2.0
-        # timezone for timestamps (GMT+7)
-        from datetime import timezone, timedelta
-        self.tz = timezone(timedelta(hours=7))
+        # timezone for timestamps (uses system local timezone)
+        from datetime import datetime
+        # Get local timezone by using current time
+        self.tz = datetime.now().astimezone().tzinfo
 
     def park_car(self, license_plate):
         if len(self.parked_cars) < self.capacity:
@@ -29,7 +30,7 @@ class CarPark:
             print("✗ Car park is full!")
             return False
 
-    def remove_car(self, spot):
+    def remove_car(self, spot, *, hours_override=None, amount_override=None):
         if spot in self.parked_cars:
             rec = self.parked_cars.pop(spot)
             plate = rec.get('plate')
@@ -37,16 +38,36 @@ class CarPark:
             from datetime import datetime
             time_out = datetime.now(self.tz).isoformat()
 
-            # compute amount based on elapsed time
+            # compute amount based on elapsed time unless override provided
+            hours = None
+            if hours_override is not None:
+                try:
+                    hours = max(float(hours_override), 0.0)
+                except Exception:
+                    hours = None
+
             try:
-                from datetime import datetime as _dt
+                from datetime import datetime as _dt, timedelta
                 t_in = _dt.fromisoformat(time_in_str)
-                t_out = _dt.fromisoformat(time_out)
-                seconds = (t_out - t_in).total_seconds()
-                hours = seconds / 3600.0
-                amount = round(hours * self.rate_per_hour, 2)
+                if hours is not None:
+                    t_out = t_in + timedelta(hours=hours)
+                    time_out = t_out.isoformat()
+                else:
+                    t_out = _dt.fromisoformat(time_out)
+                    seconds = (t_out - t_in).total_seconds()
+                    hours = seconds / 3600.0
             except Exception:
-                amount = 0.0
+                hours = None
+
+            if hours is None:
+                hours = 0.0
+            amount = round(hours * self.rate_per_hour, 2)
+
+            if amount_override is not None:
+                try:
+                    amount = round(float(amount_override), 2)
+                except Exception:
+                    pass
 
             transaction = {
                 'spot': spot,
@@ -55,7 +76,7 @@ class CarPark:
                 'time_out': time_out,
                 'amount': amount,
                 'paid': False,
-                'comments': '',
+                'comments': rec.get('comments', ''),
             }
             self.transactions.append(transaction)
             print(f"✓ Car {plate} removed from spot {spot}")
@@ -63,6 +84,17 @@ class CarPark:
         else:
             print("✗ Invalid spot number")
             return False
+
+    def update_comments(self, spot, comments):
+        if spot not in self.parked_cars:
+            return False
+        self.parked_cars[spot]['comments'] = comments or ''
+        # also update the latest open transaction if any
+        for tx in reversed(self.transactions):
+            if tx.get('spot') == spot and not tx.get('time_out'):
+                tx['comments'] = comments or ''
+                break
+        return True
 
     def view_cars(self):
         if not self.parked_cars:

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Car Park Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Car Park Manager | Executable by One Media Asia Co, Ltd</h1>
+      <button id="logout-btn" class="secondary hidden">Logout</button>
+    </header>
+
+    <main class="app-main">
+      <section id="login-card" class="card">
+        <h2>Sign in</h2>
+        <form id="login-form">
+          <label>
+            Username
+            <input type="text" name="username" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Login</button>
+          <p class="hint">Default admin credentials are <code>admin / admin</code>.</p>
+        </form>
+      </section>
+
+      <section id="dashboard" class="hidden">
+        <div class="cards cards-quick">
+          <div class="card">
+            <h3>Overview</h3>
+            <p><strong>User:</strong> <span id="summary-user">-</span></p>
+            <p><strong>Role:</strong> <span id="summary-role">-</span></p>
+            <p><strong>Capacity:</strong> <span id="summary-capacity">-</span></p>
+            <p><strong>Available Spots:</strong> <span id="summary-available">-</span></p>
+            <p><strong>Rate / hr:</strong> $<span id="summary-rate">-</span></p>
+          </div>
+
+          <div class="card">
+            <h3>Park Car</h3>
+            <form id="park-form">
+              <label>License Plate
+                <input type="text" name="plate" placeholder="ABC 123" required>
+              </label>
+              <button type="submit">Park</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Remove Car</h3>
+            <p class="hint">Open the checkout modal to set hours and charges.</p>
+            <button id="open-remove-modal" type="button">Open Remove Modal</button>
+          </div>
+
+          <div class="card">
+            <h3>Search Registration</h3>
+            <form id="search-form">
+              <label>Registration / Partial
+                <input type="text" name="query" placeholder="e.g. ABC" required>
+              </label>
+              <button type="submit">Search</button>
+            </form>
+            <div id="search-results" class="search-results muted">Enter a plate to search.</div>
+          </div>
+        </div>
+
+        <div class="cards cards-ops">
+          <div class="card card-table">
+            <div class="card-header">
+              <h3>Currently Parked Cars</h3>
+              <span id="parked-count">0</span>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Spot</th>
+                    <th>Plate</th>
+                    <th>Time In</th>
+                    <th>Comments</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="parked-table">
+                  <tr><td colspan="5" class="muted">No cars parked.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card card-table">
+            <div class="card-header">
+              <h3>Recent Transactions</h3>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Spot</th>
+                    <th>Plate</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="transactions-table">
+                  <tr><td colspan="5" class="muted">No transactions.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="cards cards-admin">
+          <div class="card admin-only hidden">
+            <h3>Admin Tools</h3>
+            <form id="rate-form">
+              <label>Rate / hr
+                <input type="number" name="rate" step="0.25" min="0.25" required>
+              </label>
+              <button type="submit">Update Rate</button>
+            </form>
+            <form id="setup-form">
+              <label>New Capacity
+                <input type="number" name="capacity" min="1" required>
+              </label>
+              <p class="hint">Uses the current rate per hour.</p>
+              <button type="submit" class="danger">Create Fresh Park</button>
+            </form>
+            <div class="button-row">
+              <button id="save-btn" type="button">Save to DB</button>
+              <button id="load-btn" type="button">Load from DB</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="toast" class="toast hidden"></div>
+        <div id="remove-modal" class="modal hidden">
+          <div class="modal-backdrop" data-close="remove-modal"></div>
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3>Remove Car</h3>
+              <button type="button" class="icon-btn" data-close="remove-modal">&times;</button>
+            </div>
+            <form id="remove-modal-form">
+              <label>Spot Number
+                <input type="number" name="spot" id="remove-spot" min="1" required>
+              </label>
+              <div class="split">
+                <label>Hours Parked
+                  <input type="number" name="hours" id="remove-hours" min="0" step="0.25" placeholder="Leave blank to auto-calc">
+                </label>
+                <label>Amount ($)
+                  <input type="number" name="amount" id="remove-amount" min="0" step="0.01" placeholder="Auto-calculated">
+                </label>
+              </div>
+              <p class="hint">Enter hours to auto-fill the amount, or override it manually.</p>
+              <div class="button-row">
+                <button type="submit">Confirm Removal</button>
+                <button type="button" class="secondary" data-close="remove-modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div id="comment-modal" class="modal hidden">
+          <div class="modal-backdrop" data-close="comment-modal"></div>
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3 id="comment-modal-title">Edit Comments</h3>
+              <button type="button" class="icon-btn" data-close="comment-modal">&times;</button>
+            </div>
+            <form id="comment-form">
+              <p class="muted" id="comment-spot-label"></p>
+              <label>Comments
+                <textarea id="comment-text" name="comments" rows="5" placeholder="Add notes about this car..."></textarea>
+              </label>
+              <div class="button-row">
+                <button type="submit">Save Comments</button>
+                <button type="button" class="secondary" data-close="comment-modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
+
