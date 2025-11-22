@@ -267,6 +267,33 @@ def change_password(username):
     return jsonify({"message": "Password updated"})
 
 
+@app.post("/api/account/password")
+@login_required
+def change_own_password():
+    """Allow users to change their own password with current password verification."""
+    username = session.get("username")
+    if not username:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    data = request.get_json() or {}
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+    
+    if not current_password or not new_password:
+        return jsonify({"error": "Current password and new password required"}), 400
+    
+    # Verify current password
+    if not user_manager.authenticate(username, current_password):
+        return jsonify({"error": "Current password is incorrect"}), 401
+    
+    try:
+        user_manager.change_password(username, new_password)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    
+    return jsonify({"message": "Password updated"})
+
+
 @app.delete("/api/users/<username>")
 @admin_required
 def delete_user(username):

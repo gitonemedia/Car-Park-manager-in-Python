@@ -136,6 +136,18 @@
               <button id="load-btn" type="button">Load from DB</button>
             </div>
           </div>
+
+          <div class="card admin-only hidden">
+            <h3>User Management</h3>
+            <button id="open-users-modal" type="button">Manage Users</button>
+            <p class="hint">Add, edit, or remove user accounts.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Account Settings</h3>
+          <button id="open-password-modal" type="button">Change Password</button>
+          <p class="hint">Update your account password.</p>
         </div>
 
         <div id="toast" class="toast hidden"></div>
@@ -181,6 +193,113 @@
               <div class="button-row">
                 <button type="submit">Save Comments</button>
                 <button type="button" class="secondary" data-close="comment-modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="users-modal" class="modal hidden">
+          <div class="modal-backdrop" data-close="users-modal"></div>
+          <div class="modal-card" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+              <h3>User Management</h3>
+              <button type="button" class="icon-btn" data-close="users-modal">&times;</button>
+            </div>
+            <div class="button-row" style="margin-bottom: 1rem;">
+              <button id="add-user-btn" type="button">Add User</button>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table">
+                  <tr><td colspan="4" class="muted">Loading users...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="add-user-modal" class="modal hidden">
+          <div class="modal-backdrop" data-close="add-user-modal"></div>
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3>Add New User</h3>
+              <button type="button" class="icon-btn" data-close="add-user-modal">&times;</button>
+            </div>
+            <form id="add-user-form">
+              <label>Username
+                <input type="text" name="username" required autocomplete="username">
+              </label>
+              <label>Password
+                <input type="password" name="password" required autocomplete="new-password">
+              </label>
+              <label>Confirm Password
+                <input type="password" name="confirm_password" required autocomplete="new-password">
+              </label>
+              <label>Role
+                <select name="role" required>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+              <div class="button-row">
+                <button type="submit">Create User</button>
+                <button type="button" class="secondary" data-close="add-user-modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="password-modal" class="modal hidden">
+          <div class="modal-backdrop" data-close="password-modal"></div>
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3>Change Password</h3>
+              <button type="button" class="icon-btn" data-close="password-modal">&times;</button>
+            </div>
+            <form id="password-form">
+              <label>Current Password
+                <input type="password" name="current_password" required autocomplete="current-password">
+              </label>
+              <label>New Password
+                <input type="password" name="new_password" required autocomplete="new-password">
+              </label>
+              <label>Confirm New Password
+                <input type="password" name="confirm_password" required autocomplete="new-password">
+              </label>
+              <div class="button-row">
+                <button type="submit">Update Password</button>
+                <button type="button" class="secondary" data-close="password-modal">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="reset-password-modal" class="modal hidden">
+          <div class="modal-backdrop" data-close="reset-password-modal"></div>
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3 id="reset-password-title">Reset Password</h3>
+              <button type="button" class="icon-btn" data-close="reset-password-modal">&times;</button>
+            </div>
+            <form id="reset-password-form">
+              <p class="muted" id="reset-password-user"></p>
+              <label>New Password
+                <input type="password" name="new_password" required autocomplete="new-password">
+              </label>
+              <label>Confirm New Password
+                <input type="password" name="confirm_password" required autocomplete="new-password">
+              </label>
+              <div class="button-row">
+                <button type="submit">Reset Password</button>
+                <button type="button" class="secondary" data-close="reset-password-modal">Cancel</button>
               </div>
             </form>
           </div>

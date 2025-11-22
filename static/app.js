@@ -18,11 +18,25 @@ const commentModal = document.getElementById("comment-modal");
 const commentForm = document.getElementById("comment-form");
 const commentTextarea = document.getElementById("comment-text");
 const commentSpotLabel = document.getElementById("comment-spot-label");
+const usersModal = document.getElementById("users-modal");
+const addUserModal = document.getElementById("add-user-modal");
+const addUserForm = document.getElementById("add-user-form");
+const usersTable = document.getElementById("users-table");
+const addUserBtn = document.getElementById("add-user-btn");
+const openUsersModalBtn = document.getElementById("open-users-modal");
+const passwordModal = document.getElementById("password-modal");
+const passwordForm = document.getElementById("password-form");
+const openPasswordModalBtn = document.getElementById("open-password-modal");
+const resetPasswordModal = document.getElementById("reset-password-modal");
+const resetPasswordForm = document.getElementById("reset-password-form");
+const resetPasswordTitle = document.getElementById("reset-password-title");
+const resetPasswordUser = document.getElementById("reset-password-user");
 
 let currentRate = 0;
 let amountTouched = false;
 let latestState = null;
 let commentSpot = null;
+let resetPasswordUsername = null;
 
 async function apiRequest(path, options = {}) {
   const opts = {
@@ -449,6 +463,247 @@ document.getElementById("load-btn").addEventListener("click", async () => {
     showToast(err.message || "Failed to load state", "error");
   }
 });
+
+// User Management Functions
+async function loadUsers() {
+  try {
+    const data = await apiRequest("/api/users");
+    const users = data.users || [];
+    
+    if (users.length === 0) {
+      usersTable.innerHTML = '<tr><td colspan="4" class="muted">No users found.</td></tr>';
+      return;
+    }
+    
+    usersTable.innerHTML = users.map(user => {
+      const created = user.created_at ? new Date(user.created_at).toLocaleString() : 'N/A';
+      return `
+        <tr>
+          <td>${user.username}</td>
+          <td><span style="text-transform: capitalize; font-weight: 600;">${user.role}</span></td>
+          <td>${created}</td>
+          <td>
+            <div class="table-actions">
+              <button type="button" class="link-btn" data-action="reset-password" data-username="${user.username}">Reset Password</button>
+              <button type="button" class="link-btn" style="color: var(--danger);" data-action="delete-user" data-username="${user.username}">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    usersTable.innerHTML = `<tr><td colspan="4" class="muted" style="color: var(--danger);">Error: ${err.message}</td></tr>`;
+  }
+}
+
+function openUsersModal() {
+  usersModal.classList.remove("hidden");
+  loadUsers();
+}
+
+function closeUsersModal() {
+  usersModal.classList.add("hidden");
+}
+
+function openAddUserModal() {
+  addUserForm.reset();
+  addUserModal.classList.remove("hidden");
+}
+
+function closeAddUserModal() {
+  addUserModal.classList.add("hidden");
+}
+
+function openPasswordModal() {
+  passwordForm.reset();
+  passwordModal.classList.remove("hidden");
+}
+
+function closePasswordModal() {
+  passwordModal.classList.add("hidden");
+}
+
+function openResetPasswordModal(username) {
+  resetPasswordUsername = username;
+  resetPasswordTitle.textContent = `Reset Password for ${username}`;
+  resetPasswordUser.textContent = `Username: ${username}`;
+  resetPasswordForm.reset();
+  resetPasswordModal.classList.remove("hidden");
+}
+
+function closeResetPasswordModal() {
+  resetPasswordModal.classList.add("hidden");
+  resetPasswordUsername = null;
+}
+
+// Event Listeners for User Management
+openUsersModalBtn?.addEventListener("click", openUsersModal);
+addUserBtn?.addEventListener("click", openAddUserModal);
+openPasswordModalBtn?.addEventListener("click", openPasswordModal);
+
+// Modal backdrop clicks
+usersModal?.addEventListener("click", (e) => {
+  if (e.target.dataset.close === "users-modal") {
+    closeUsersModal();
+  }
+});
+
+addUserModal?.addEventListener("click", (e) => {
+  if (e.target.dataset.close === "add-user-modal") {
+    closeAddUserModal();
+  }
+});
+
+passwordModal?.addEventListener("click", (e) => {
+  if (e.target.dataset.close === "password-modal") {
+    closePasswordModal();
+  }
+});
+
+resetPasswordModal?.addEventListener("click", (e) => {
+  if (e.target.dataset.close === "reset-password-modal") {
+    closeResetPasswordModal();
+  }
+});
+
+// Add User Form
+addUserForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const username = form.username.value.trim();
+  const password = form.password.value;
+  const confirmPassword = form.confirm_password.value;
+  const role = form.role.value;
+  
+  if (!username) {
+    showToast("Username is required", "error");
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    showToast("Passwords do not match", "error");
+    return;
+  }
+  
+  if (password.length < 1) {
+    showToast("Password cannot be empty", "error");
+    return;
+  }
+  
+  try {
+    await apiRequest("/api/users", {
+      method: "POST",
+      body: { username, password, role },
+    });
+    showToast(`User "${username}" created successfully`);
+    closeAddUserModal();
+    loadUsers();
+  } catch (err) {
+    showToast(err.message || "Failed to create user", "error");
+  }
+});
+
+// Change Password Form (own password)
+passwordForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const currentPassword = form.current_password.value;
+  const newPassword = form.new_password.value;
+  const confirmPassword = form.confirm_password.value;
+  
+  if (newPassword !== confirmPassword) {
+    showToast("New passwords do not match", "error");
+    return;
+  }
+  
+  if (newPassword.length < 1) {
+    showToast("Password cannot be empty", "error");
+    return;
+  }
+  
+  try {
+    await apiRequest("/api/account/password", {
+      method: "POST",
+      body: { 
+        current_password: currentPassword,
+        new_password: newPassword
+      },
+    });
+    
+    showToast("Password updated successfully");
+    closePasswordModal();
+  } catch (err) {
+    if (err.status === 401) {
+      showToast("Current password is incorrect", "error");
+    } else {
+      showToast(err.message || "Failed to update password", "error");
+    }
+  }
+});
+
+// Reset Password Form (admin resetting another user's password)
+resetPasswordForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!resetPasswordUsername) {
+    showToast("No user selected", "error");
+    return;
+  }
+  
+  const form = e.target;
+  const newPassword = form.new_password.value;
+  const confirmPassword = form.confirm_password.value;
+  
+  if (newPassword !== confirmPassword) {
+    showToast("Passwords do not match", "error");
+    return;
+  }
+  
+  if (newPassword.length < 1) {
+    showToast("Password cannot be empty", "error");
+    return;
+  }
+  
+  try {
+    await apiRequest(`/api/users/${resetPasswordUsername}/password`, {
+      method: "POST",
+      body: { password: newPassword },
+    });
+    showToast(`Password for "${resetPasswordUsername}" reset successfully`);
+    closeResetPasswordModal();
+  } catch (err) {
+    showToast(err.message || "Failed to reset password", "error");
+  }
+});
+
+// Users table actions
+usersTable?.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+  
+  const action = btn.dataset.action;
+  const username = btn.dataset.username;
+  
+  if (action === "reset-password") {
+    openResetPasswordModal(username);
+  } else if (action === "delete-user") {
+    if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
+      return;
+    }
+    deleteUser(username);
+  }
+});
+
+async function deleteUser(username) {
+  try {
+    await apiRequest(`/api/users/${username}`, {
+      method: "DELETE",
+    });
+    showToast(`User "${username}" deleted successfully`);
+    loadUsers();
+  } catch (err) {
+    showToast(err.message || "Failed to delete user", "error");
+  }
+}
 
 refreshState();
 
