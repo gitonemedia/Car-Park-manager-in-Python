@@ -8,7 +8,9 @@ from typing import Optional, Dict, List
 # CHANGE THESE BEFORE FIRST RUN TO SET YOUR OWN DEFAULT ADMIN ACCOUNT.
 # ============================================================================
 DEFAULT_ADMIN_USERNAME = "admin"
-DEFAULT_ADMIN_PASSWORD = ",.,."
+# NOTE: this defaults to 'admin' to match the README and UI hint. Change
+# before first run to a secure password for production.
+DEFAULT_ADMIN_PASSWORD = "admin"
 # ============================================================================
 
 
