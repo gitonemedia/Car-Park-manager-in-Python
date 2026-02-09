@@ -16,9 +16,12 @@ fi
 
 cd "$BASE_DIR"
 
-# Ensure log directory exists (may require appropriate permissions)
+# Ensure log directory exists (try /var/log/carpark, fall back to project logs)
 LOG_DIR="/var/log/carpark"
-mkdir -p "$LOG_DIR" || true
+if ! mkdir -p "$LOG_DIR" 2>/dev/null; then
+  LOG_DIR="$BASE_DIR/logs"
+  mkdir -p "$LOG_DIR"
+fi
 
 exec "$GUNICORN_BIN" \
   --workers 3 \
