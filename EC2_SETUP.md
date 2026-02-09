@@ -28,7 +28,6 @@ cd Car-Park-manager-in-Python
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install --upgrade pip
 pip install -r requirements-prod.txt
 ```
 
@@ -50,23 +49,7 @@ sudo systemctl enable nginx
 
 ## Step 6: Create Systemd Service for Gunicorn
 ```bash
-sudo tee /etc/systemd/system/carpark.service > /dev/null << EOF
-[Unit]
-Description=Car Park Manager Gunicorn Application
-After=network.target
-
-[Service]
-User=ubuntu
-WorkingDirectory=/home/ubuntu/Car-Park-manager-in-Python
-Environment="PATH=/home/ubuntu/Car-Park-manager-in-Python/venv/bin"
-ExecStart=/home/ubuntu/Car-Park-manager-in-Python/venv/bin/gunicorn --workers 4 --bind 127.0.0.1:5000 app:app
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
+    
 # Enable and start the service
 sudo systemctl daemon-reload
 sudo systemctl enable carpark
